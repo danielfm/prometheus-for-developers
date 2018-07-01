@@ -1,0 +1,7 @@
+# Directory from which to load dashboard JSON files
+- name: default
+  org_id: 1
+  folder: ''
+  type: file
+  options:
+    folder: /var/lib/grafana/dashboards

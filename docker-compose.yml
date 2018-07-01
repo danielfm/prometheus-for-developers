@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  # Our sample Node.js application
+  sample-app:
+    build:
+      context: ./sample-app
+    ports:
+      - 4000:4000
+
+  # Prometheus is a monitoring and time-series database
+  prometheus:
+    image: prom/prometheus:v2.3.1
+    restart: on-failure
+    command: --config.file=/etc/prometheus/config/prometheus.yml
+    volumes:
+      - ./config/prometheus/:/etc/prometheus/config/
+    ports:
+      - 9090:9090
+    depends_on:
+      - alertmanager
+
+  # Alertmanager is the component responsible for de-duplicating and sending
+  # alerts via different backends (i.e. PagerDuty, Slack, etc)
+  alertmanager:
+    image: prom/alertmanager:v0.15.0
+    restart: on-failure
+    ports:
+      - 9093:9093
+
+  # Grafana can be used for creating nice dashboards based on the data stored
+  # in Prometheus
+  grafana:
+    image: grafana/grafana:5.2.0
+    restart: on-failure
+    environment:
+      GF_LOG_LEVEL: debug
+    volumes:
+      - ./config/grafana/datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+      - ./config/grafana/dashboard-providers.yml:/etc/grafana/provisioning/dashboards/dashboard-providers.yml
+      - ./config/grafana/dashboards/:/var/lib/grafana/dashboards/
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus

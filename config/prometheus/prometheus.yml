@@ -1,0 +1,29 @@
+# High resolution metrics :)
+global:
+  scrape_interval:     5s
+  evaluation_interval: 5s
+
+# Files for defining recording/alerting rules
+rule_files:
+  - /etc/prometheus/config/prometheus.rules.yml
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+
+# Simple scrape configuration for each service
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: grafana
+    static_configs:
+      - targets: ['grafana:3000']
+
+  - job_name: sample-app
+    static_configs:
+      - targets: ['sample-app:4000']
