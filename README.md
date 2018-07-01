@@ -209,6 +209,11 @@ Open the Prometheus UI at <http://localhost:9090/graph>, type
 
 You can use the graph controls to zoom into a specific region.
 
+This first query is very simple as it only plots the value of the
+`process_resident_memory_bytes` gauge as time passes, and as you might
+have guessed, that query displays the resident memory usage for each target,
+in bytes.
+
 Since our setup uses a 5-second scrape interval, Prometheus will hit the
 `/metrics` endpoint of our targets every 5 seconds to fetch the current
 metrics and store those data points sequentially, indexed by timestamp.
@@ -219,19 +224,13 @@ global:
   scrape_interval: 5s
 ```
 
-From [Wikipedia](https://en.wikipedia.org/wiki/Time_series):
+You can see the all samples from that metric in the past minute by querying
+`process_resident_memory_bytes{job="grafana"}[1m]` (select _Console_ in the
+Prometheus UI):
 
-> A time series is a series of data points indexed (or listed or graphed)
-> in time order. Most commonly, a time series is a sequence taken at
-> successive equally spaced points in time. Thus it is a sequence of
-> discrete-time data. Examples of time series are heights of ocean tides,
-> counts of sunspots, and the daily closing value of the Dow Jones Industrial
-> Average.
-
-This first query is very simple as it only plots the value of the
-`process_resident_memory_bytes` _gauge_ as time passes, and as you might
-have guessed, that query displays the resident memory usage for each target,
-in bytes.
+| Element | Value |
+|---------|-------|
+| process_resident_memory_bytes{instance="grafana:3000",job="grafana"} | 40861696@1530461477.446 43298816@1530461482.447 43778048@1530461487.451 44785664@1530461492.447 44785664@1530461497.447 45043712@1530461502.448 45043712@1530461507.448 45301760@1530461512.451 45301760@1530461517.448 45301760@1530461522.448 45895680@1530461527.448 45895680@1530461532.447 |
 
 ### Duplicate Metrics Names?
 
@@ -243,7 +242,7 @@ how can we be sure we are not mixing metrics between different applications
 into the same time series data?
 
 Consider the previous metric, `process_resident_memory_bytes`: Grafana,
-Prometheus, and our sample application all export a `gauge` metric under the
+Prometheus, and our sample application all export a gauge metric under the
 same name. However, did you notice in the previous plot that somehow we were
 able to get a separate time series from each application?
 
@@ -370,8 +369,7 @@ We can measure request durations with
 it's not recommended relying on averages to track request durations because
 averages can be very misleading (see the [References](#references) for a few posts on the pitfalls of averages and how percentiles can help).
 
-In Prometheus, we can generate percentiles with `summary` or `histogram`
-metrics.
+In Prometheus, we can generate percentiles with summaries or histograms.
 
 To show the differences between these two, our sample application exposes
 two custom metrics for measuring request durations with:
@@ -411,9 +409,9 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 });
 ```
 
-As you can see, in a `summary` we specify the percentiles in which we
+As you can see, in a summary we specify the percentiles in which we
 want the Prometheus client to calculate and report latencies, while in a
-`histogram` we specify the buckets where the observed durations will be
+histogram we specify the buckets where the observed durations will be
 classified (i.e. a 300ms duration will be stored in the 250ms-500ms
 bucket).
 
