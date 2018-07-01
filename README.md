@@ -235,7 +235,7 @@ Prometheus UI):
 ### Duplicate Metrics Names?
 
 If you inspect the contents of the `/metrics` endpoint at all our targets,
-you'll see that there are a few metrics exported under the same name.
+you'll see that multiple targets export metrics under the same name.
 
 But isn't this a problem? If we are exporting metrics under the same name,
 how can we be sure we are not mixing metrics between different applications
@@ -284,9 +284,9 @@ report the application is back up again.
 
 **Want to know more?** The Prometheus query UI provides a combo box with all
 available metric names registered in its database. Do some exploring, try
-querying different ones. For instance, can you plot the current usage of file
-descriptor handles (in %) for both Grafana and Prometheus? **Tip:** the metric
-names end with `_fds`.
+querying different ones. For instance, can you plot the file descriptor
+handles usage (in %) for all targets? **Tip:** the metric names end with
+`_fds`.
 
 ---
 
@@ -430,8 +430,7 @@ app.get('/', async (req, res) => {
             });
         };
         await sleep(1000);
-    }   
-
+    }
     res.send('Hello, world!');
 });
 ```
@@ -457,14 +456,8 @@ Now run the following queries in the Prometheus UI:
 # Average response time
 rate(sample_app_summary_request_duration_seconds_sum[15s]) / rate(sample_app_summary_request_duration_seconds_count[15s])
 
-# 95th percentile (via summary)
-sample_app_summary_request_duration_seconds{quantile="0.95"}
-
 # 99th percentile (via summary)
 sample_app_summary_request_duration_seconds{quantile="0.99"}
-
-# 95th percentile (via histogram)
-histogram_quantile(0.95, sum(rate(sample_app_histogram_request_duration_seconds_bucket[15s])) by (le, method, statuscode))
 
 # 99th percentile (via histogram)
 histogram_quantile(0.99, sum(rate(sample_app_histogram_request_duration_seconds_bucket[15s])) by (le, method, statuscode))
@@ -561,13 +554,13 @@ Not quite there, but it's an improvement!
 
 ---
 
-**Want to know more?** If all it takes for us to have high accuracy
+**Want to know more?** If all it takes for us to achieve high accuracy
 histogram data is to use more buckets, why not use a large number of small
 buckets?
 
 The reason is efficiency. Remember:
 
-**more buckets = more labels = more time series = more space = slower
+**more buckets == more labels == more time series == more space == slower
 queries**
 
 Let's say you have an SLA to serve 99% of requests within 300ms. If all
@@ -575,7 +568,8 @@ you want to know is whether you are honoring your SLA or not, it doesn't
 really matter if the quantile estimation is not accurate for requests
 slower than 300ms.
 
-You might also be wondering: why not using summaries instead of histograms?
+You might also be wondering: if summaries are more precise, why not using
+summaries instead of histograms?
 
 Quoting the [documentation](https://prometheus.io/docs/practices/histograms/#errors-of-quantile-estimation):
 
@@ -588,23 +582,23 @@ with multiple replicas, you can safely use the `histogram_quantile()`
 function to calculate the 99th percentile across all requests to all
 replicas. You cannot do this with summaries. I mean, you can `avg()` the
 99th percentiles of all replicas, or take the `max()`, but the value you
-will get will not match the reality.
+will get will be statistically incorrect.
 
 ---
 
 ### Measuring Throughput
 
 If you are using a histogram to measure request duration, you can use
-the `<basename>_count` timeseries to measure throughput without having
-to introduce another metric.
+the `_count` timeseries to measure throughput without having to introduce
+another metric.
 
-For instance, if your histogram's name is
+For instance, if your histogram metric name is
 `sample_app_histogram_request_duration_seconds`, then you can use the
 `sample_app_histogram_request_duration_seconds_count` metric to measure
 throughput:
 
 ```bash
-# Number of requests per second
+# Number of requests per second (data from the past 30s)
 rate(sample_app_histogram_request_duration_seconds_count[30s])
 ```
 
@@ -626,8 +620,8 @@ process_resident_memory_bytes
 rate(process_cpu_seconds_total[30s])
 ```
 
-If you use `wrk` to generate some load on our sample application,
-you might see something like this:
+If you use `wrk` to put some load into our sample application, you might see
+something like this:
 
 ![Sample app memory/CPU usage](./img/sample-app-memory-cpu-usage.png)
 
@@ -642,6 +636,9 @@ by type, event loop lag, and current active handles/requests. Plot those
 metrics in the Prometheus UI, and see how they behave when you apply
 some load to the application.
 
+A sample dashboard containing all those metrics is also available in our
+Grafana server at <http://localhost:3000>.
+
 ---
 
 ### Monitoring Applications Without a Metrics Endpoint
@@ -652,14 +649,13 @@ a MySQL instance, which does not provide a Prometheus metrics endpoint?
 What can we do?
 
 That's where _exporters_ come in. The
-[documentation](https://prometheus.io/docs/instrumenting/exporters/)
-lists a pretty comprehensive list of official and third-party metrics
-exporters for a variety of systems, such as databases, messaging systems,
-cloud providers, and so forth.
+[documentation](https://prometheus.io/docs/instrumenting/exporters/) lists a
+comprehensive list of official and third-party exporters for a variety of
+systems, such as databases, messaging systems, cloud providers, and so forth.
 
 For a very simplistic example, check out the
 [aws-limits-exporter](https://github.com/danielfm/aws-limits-exporter) 
-project, implemented by yours truly, which is about 200 lines of Go code.
+project, which is about 200 lines of Go code.
 
 ### Final Gotchas
 
@@ -671,7 +667,7 @@ for when instrumenting your applications.
 Also, beware that there are
 [conventions](https://prometheus.io/docs/practices/naming/) on what makes
 a good metric name; poorly (or wrongly) named metrics will cause you a
-hard time when trying to understand the behaviour of your systems later.
+hard time when creating queries later.
 
 ## References
 
