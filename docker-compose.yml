@@ -5,6 +5,8 @@ services:
   sample-app:
     build:
       context: ./sample-app
+    volumes:
+      - ./sample-app/index.js:/usr/src/app/index.js
     ports:
       - 4000:4000
 

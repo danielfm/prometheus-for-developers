@@ -542,7 +542,6 @@ to see if the quantile estimation improves:
 
 ```bash
 $ docker-compose rm -fs
-$ docker-compose build sample-app
 $ docker-compose up -d
 ```
 
