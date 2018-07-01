@@ -47,9 +47,6 @@ Run the following command to start everything up:
 $ docker-compose up -d
 ```
 
-This will start Alertmanager, Grafana, and Prometheus at the following
-addresses:
-
 - Alertmanager: <http://localhost:9093>
 - Grafana: <http://localhost:3000> (user/password: `admin`)
 - Prometheus: <http://localhost:9090>
@@ -74,7 +71,7 @@ from jobs running in their cluster orchestration platform,
 
 The following image shows an overview of the Prometheus architecture.
 
-![Prometheus architecture](./img/prometheus-architecture.svg)
+![Prometheus architecture](./img/prometheus-architecture.png)
 
 In the center we have a **Prometheus server**, which is the component
 responsible for periodically collecting and storing metrics from various
@@ -651,7 +648,7 @@ some load to the application.
 
 ### Monitoring Applications Without a Metrics Endpoint
 
-We learned that prometheus needs all applications to expose a `/metrics`
+We learned that Prometheus needs all applications to expose a `/metrics`
 HTTP endpoint for it to scrape metrics. But what if you want to monitor
 a MySQL instance, which does not provide a Prometheus metrics endpoint?
 What can we do?
