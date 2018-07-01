@@ -16,8 +16,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 3,
-  "iteration": 1530456304351,
+  "iteration": 1530460697446,
   "links": [],
   "panels": [
     {
@@ -467,8 +466,8 @@
       "yaxes": [
         {
           "decimals": null,
-          "format": "short",
-          "label": "req/s",
+          "format": "s",
+          "label": "",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -1214,7 +1213,7 @@
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 20
+            "y": 19
           },
           "id": 4,
           "legend": {
@@ -1300,7 +1299,7 @@
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 20
+            "y": 19
           },
           "id": 5,
           "legend": {
@@ -1386,7 +1385,7 @@
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 20
+            "y": 19
           },
           "id": 6,
           "legend": {
@@ -1466,7 +1465,7 @@
       "type": "row"
     }
   ],
-  "refresh": "1m",
+  "refresh": "10s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
@@ -1478,7 +1477,6 @@
     "list": [
       {
         "current": {
-          "selected": true,
           "text": "default",
           "value": "default"
         },
@@ -1494,7 +1492,6 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
           "text": "sample-app",
           "value": "sample-app"
         },
@@ -1518,7 +1515,6 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
           "text": "sample-app:4000",
           "value": "sample-app:4000"
         },
@@ -1573,5 +1569,5 @@
   "timezone": "utc",
   "title": "Sample Node.js Application",
   "uid": "000000003",
-  "version": 8
+  "version": 1
 }
