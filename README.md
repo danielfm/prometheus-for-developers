@@ -568,7 +568,7 @@ you want to know is whether you are honoring your SLA or not, it doesn't
 really matter if the quantile estimation is not accurate for requests
 slower than 300ms.
 
-You might also be wondering: if summaries are more precise, why not using
+You might also be wondering: if summaries are more precise, why not use
 summaries instead of histograms?
 
 Quoting the [documentation](https://prometheus.io/docs/practices/histograms/#errors-of-quantile-estimation):
@@ -582,15 +582,15 @@ with multiple replicas, you can safely use the `histogram_quantile()`
 function to calculate the 99th percentile across all requests to all
 replicas. You cannot do this with summaries. I mean, you can `avg()` the
 99th percentiles of all replicas, or take the `max()`, but the value you
-will get will be statistically incorrect.
+get will be statistically incorrect.
 
 ---
 
 ### Measuring Throughput
 
 If you are using a histogram to measure request duration, you can use
-the `_count` timeseries to measure throughput without having to introduce
-another metric.
+the `<basename>_count` timeseries to measure throughput without having to
+introduce another metric.
 
 For instance, if your histogram metric name is
 `sample_app_histogram_request_duration_seconds`, then you can use the
@@ -620,21 +620,21 @@ process_resident_memory_bytes
 rate(process_cpu_seconds_total[30s])
 ```
 
-If you use `wrk` to put some load into our sample application, you might see
+If you use `wrk` to put some load into our sample application you might see
 something like this:
 
 ![Sample app memory/CPU usage](./img/sample-app-memory-cpu-usage.png)
 
-If you run `docker stats` at the same time as the load test, you should
-see the metrics match the data provided by Docker.
+You can compare these metrics with the data given by `docker stats` to see if
+they agree with each other.
 
 ---
 
 **Want to know more?** Our sample application exports different metrics
 to expose some internal Node.js information, such as GC runs, heap usage
 by type, event loop lag, and current active handles/requests. Plot those
-metrics in the Prometheus UI, and see how they behave when you apply
-some load to the application.
+metrics in the Prometheus UI, and see how they behave when you put some
+load to the application.
 
 A sample dashboard containing all those metrics is also available in our
 Grafana server at <http://localhost:3000>.
