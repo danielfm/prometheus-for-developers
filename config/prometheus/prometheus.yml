@@ -10,20 +10,23 @@ rule_files:
 # Alertmanager configuration
 alerting:
   alertmanagers:
-  - static_configs:
-    - targets:
-      - alertmanager:9093
+    - static_configs:
+        - targets:
+            - alertmanager:9093
 
 # Simple scrape configuration for each service
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets: ['localhost:9090']
+      - targets:
+          - localhost:9090
 
   - job_name: grafana
     static_configs:
-      - targets: ['grafana:3000']
+      - targets:
+          - grafana:3000
 
   - job_name: sample-app
     static_configs:
-      - targets: ['sample-app:4000']
+      - targets:
+          - sample-app:4000

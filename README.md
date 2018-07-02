@@ -152,7 +152,8 @@ file, you can see that we listed Prometheus itself as a target.
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets: ['localhost:9090']
+      - targets:
+          - localhost:9090
 ```
 
 By default, Prometheus gets metrics via the `/metrics` endpoint in each target,
