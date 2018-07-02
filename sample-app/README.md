@@ -9,6 +9,7 @@ If you already have Node.js 8 installed on your machine, just run the following
 command to start the server at <http://localhost:4000>:
 
 ```bash
+$ npm i
 $ node index
 ```
 
