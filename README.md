@@ -15,11 +15,10 @@ me. Pull Requests are welcome!
   - [Cleaning Up](#cleaning-up)
 - [Prometheus Overview](#prometheus-overview)
   - [Push vs Pull](#push-vs-pull)
-    - [Metrics Endpoint](#metrics-endpoint)
-  - [Time Series and Data Points](#time-series-and-data-points)
+  - [Metrics Endpoint](#metrics-endpoint)
   - [Duplicate Metrics Names?](#duplicate-metrics-names)
   - [Monitoring Uptime](#monitoring-uptime)
-    - [A Basic Uptime Alert](#a-basic-uptime-alert)
+  - [A Basic Uptime Alert](#a-basic-uptime-alert)
 - [Instrumenting Your Applications](#instrumenting-your-applications)
   - [Measuring Request Durations](#measuring-request-durations)
     - [Quantile Estimation Errors](#quantile-estimation-errors)
@@ -124,7 +123,7 @@ other tools in the monitoring space regarding scope, data model, and storage.
 Now, if the application doesn't push metrics to the metrics server, how does
 the applications metrics end up in Prometheus?
 
-#### Metrics Endpoint
+### Metrics Endpoint
 
 Applications expose metrics to Prometheus via a _metrics endpoint_. To see how
 this works, let's start everything by running `docker-compose up -d` if you
@@ -199,8 +198,6 @@ In this snippet alone we can notice a few interesting things:
 But how does this text-based response turns into data points in a time series
 database?
 
-### Time Series and Data Points
-
 The best way to understand this is by running a few simple queries.
 
 Open the Prometheus UI at <http://localhost:9090/graph>, type
@@ -231,7 +228,7 @@ Prometheus UI):
 
 | Element | Value |
 |---------|-------|
-| process_resident_memory_bytes{instance="grafana:3000",job="grafana"} | 40861696@1530461477.446 43298816@1530461482.447 43778048@1530461487.451 44785664@1530461492.447 44785664@1530461497.447 45043712@1530461502.448 45043712@1530461507.448 45301760@1530461512.451 45301760@1530461517.448 45301760@1530461522.448 45895680@1530461527.448 45895680@1530461532.447 |
+| process_resident_memory_bytes{instance="grafana:3000",job="grafana"} | 40861696@1530461477.446<br/>43298816@1530461482.447<br/>43778048@1530461487.451<br/>44785664@1530461492.447<br/>44785664@1530461497.447<br/>45043712@1530461502.448<br/>45043712@1530461507.44<br/>45301760@1530461512.451<br/>45301760@1530461517.448<br/>45301760@1530461522.448<br/>45895680@1530461527.448<br/>45895680@1530461532.447 |
 
 ### Duplicate Metrics Names?
 
@@ -247,7 +244,8 @@ Prometheus, and our sample application all export a gauge metric under the
 same name. However, did you notice in the previous plot that somehow we were
 able to get a separate time series from each application?
 
-Quoting the [documentation](https://prometheus.io/docs/concepts/jobs_instances/):
+Quoting the
+[documentation](https://prometheus.io/docs/concepts/jobs_instances/):
 
 > In Prometheus terms, an endpoint you can scrape is called an **instance**,
 > usually corresponding to a single process. A collection of instances with
@@ -264,8 +262,8 @@ exposing this metric, we can see three lines in that plot.
 
 ### Monitoring Uptime
 
-For each instance scrape, Prometheus stores a `up` metric with the value `1` when
-the instance is healthy, i.e. reachable, or `0` if the scrape failed.
+For each instance scrape, Prometheus stores a `up` metric with the value `1`
+when the instance is healthy, i.e. reachable, or `0` if the scrape failed.
 
 Try plotting the query `up` in the Prometheus UI.
 
@@ -291,7 +289,7 @@ handles usage (in %) for all targets? **Tip:** the metric names end with
 
 ---
 
-##### A Basic Uptime Alert
+#### A Basic Uptime Alert
 
 We don't want to keep staring at dashboards in a big TV screen all day
 to be able to quickly detect issues in our applications, afterall, we have
@@ -307,7 +305,8 @@ OpsGenie). It also takes care of silencing and inhibition of alerts.
 Configuring Alertmanager to send metrics to PagerDuty, or Slack, or whatever,
 is out of the scope of this workshop, but we can still play around with alerts.
 
-Let's define our first alerting rule in `config/prometheus/prometheus.rules.yml`:
+Let's define our first alerting rule in
+`config/prometheus/prometheus.rules.yml`:
 
 ```yaml
 # Uptime alerting rule
@@ -368,7 +367,8 @@ We can measure request durations with
 [percentiles](https://en.wikipedia.org/wiki/Quantile) or
 [averages](https://en.wikipedia.org/wiki/Arithmetic_mean). However,
 it's not recommended relying on averages to track request durations because
-averages can be very misleading (see the [References](#references) for a few posts on the pitfalls of averages and how percentiles can help).
+averages can be very misleading (see the [References](#references) for a few
+posts on the pitfalls of averages and how percentiles can help).
 
 In Prometheus, we can generate percentiles with summaries or histograms.
 
@@ -471,7 +471,8 @@ The result of these queries may seem surprising.
 The first thing to notice is how the average response time fails to
 communicate the actual behavior of the response duration distribution
 (avg: 50ms; p99: 1s); the second is how the 99th percentile reported by the
-the summary (1s) is quite different than the one estimated by the `histogram_quantile()` function (~2.2s). How can this be?
+the summary (1s) is quite different than the one estimated by the
+`histogram_quantile()` function (~2.2s). How can this be?
 
 #### Quantile Estimation Errors
 
