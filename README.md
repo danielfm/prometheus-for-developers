@@ -560,8 +560,7 @@ buckets?
 
 The reason is efficiency. Remember:
 
-**more buckets == more labels == more time series == more space == slower
-queries**
+**more buckets == more time series == more space == slower queries**
 
 Let's say you have an SLA to serve 99% of requests within 300ms. If all
 you want to know is whether you are honoring your SLA or not, it doesn't
@@ -571,7 +570,8 @@ slower than 300ms.
 You might also be wondering: if summaries are more precise, why not use
 summaries instead of histograms?
 
-Quoting the [documentation](https://prometheus.io/docs/practices/histograms/#errors-of-quantile-estimation):
+Quoting the
+[documentation](https://prometheus.io/docs/practices/histograms/#errors-of-quantile-estimation):
 
 > A summary would have had no problem calculating the correct percentile
 > value in most cases. Unfortunately, we cannot use a summary if we need
