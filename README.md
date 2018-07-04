@@ -1,7 +1,7 @@
 # Prometheus For Developers
 
-This is a gentle introduction I created for telling the software developers
-in my [company](https://descomplica.com.br) the basics about
+This is an introductory tutorial/workshop I created for telling the software
+developers in my [company](https://descomplica.com.br) the basics about
 [Prometheus](https://prometheus.io).
 
 If you have any suggestion to improve this content, don't hesitate to contact
