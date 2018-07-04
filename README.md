@@ -97,7 +97,7 @@ metrics from our **target** applications.
 
 This means Prometheus took a different approach than other "traditional"
 monitoring tools, such as [StatsD](https://github.com/etsy/statsd), in
-which applications _push_ metrics to the metrics server or aggregator, 
+which applications _push_ metrics to the metrics server or aggregator,
 instead of having the metrics server _pulling_ metrics from applications.
 
 The consequence of this design is a better separation of concerns; when
@@ -189,7 +189,7 @@ In this snippet alone we can notice a few interesting things:
 1. Each metric has a user friendly description that explains its purpose
 2. Each metric may define additional dimensions, also known as **labels**. For
    instance, the metric `go_info` has a `version` label
-   - Every time series is uniquely identified by its metric name and the set of 
+   - Every time series is uniquely identified by its metric name and the set of
      label-value pairs
 3. Each metric is defined as a specific type, such as `summary`, `gauge`,
    `counter`, and `histogram`. More information on each data type can be found
@@ -252,7 +252,7 @@ Quoting the
 > the same purpose, a process replicated for scalability or reliability for
 > example, is called a **job**.
 >
-> When Prometheus scrapes a target, it attaches some labels automatically to 
+> When Prometheus scrapes a target, it attaches some labels automatically to
 > the scraped time series which serve to identify the scraped target:
 > -  `job` - The configured job name that the target belongs to.
 > - `instance` - The `<host>:<port>` part of the target's URL that was scraped.
@@ -292,7 +292,7 @@ handles usage (in %) for all targets? **Tip:** the metric names end with
 #### A Basic Uptime Alert
 
 We don't want to keep staring at dashboards in a big TV screen all day
-to be able to quickly detect issues in our applications, afterall, we have
+to be able to quickly detect issues in our applications, after all, we have
 better things to do with our time, right?
 
 Luckily, Prometheus provides a facility for defining alerting rules that,
@@ -358,7 +358,7 @@ should go back to a green state after a few seconds.
 Let's examine a sample Node.js application we created for this workshop.
 
 Open the `./sample-app/index.js` file in your favorite text editor. The
-code is fully commented, so you should not have a hard time understading
+code is fully commented, so you should not have a hard time understanding
 it.
 
 ### Measuring Request Durations
@@ -537,6 +537,7 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 
     // Experimenting a different bucket layout
     buckets: [0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 1.2, 1.5]
+});
 ```
 
 Let's start a clean Prometheus server with the modified bucket configuration
@@ -655,7 +656,7 @@ comprehensive list of official and third-party exporters for a variety of
 systems, such as databases, messaging systems, cloud providers, and so forth.
 
 For a very simplistic example, check out the
-[aws-limits-exporter](https://github.com/danielfm/aws-limits-exporter) 
+[aws-limits-exporter](https://github.com/danielfm/aws-limits-exporter)
 project, which is about 200 lines of Go code.
 
 ### Final Gotchas
