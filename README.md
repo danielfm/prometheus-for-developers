@@ -156,7 +156,7 @@ scrape_configs:
 ```
 
 By default, Prometheus gets metrics via the `/metrics` endpoint in each target,
-so if you hit <http://prometheus:9090/metrics>, you should see something like
+so if you hit <http://localhost:9090/metrics>, you should see something like
 this:
 
 ```
