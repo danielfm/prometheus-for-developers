@@ -378,35 +378,35 @@ two custom metrics for measuring request durations with:
 ```js
 // Summary metric for measuring request durations
 const requestDurationSummary = new prometheusClient.Summary({
-    // Metric name
-    name: 'sample_app_summary_request_duration_seconds',
+  // Metric name
+  name: 'sample_app_summary_request_duration_seconds',
 
-    // Metric description
-    help: 'Summary of request durations',
+  // Metric description
+  help: 'Summary of request durations',
 
-    // Extra dimensions, or labels
-    // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-    labelNames: ['method', 'statuscode'],
+  // Extra dimensions, or labels
+  // HTTP method (GET, POST, etc), and status code (200, 500, etc)
+  labelNames: ['method', 'statuscode'],
 
-    // 50th (median), 75th, 90th, 95th, and 99th percentiles
-    percentiles: [0.5, 0.75, 0.9, 0,95, 0.99]
+  // 50th (median), 75th, 90th, 95th, and 99th percentiles
+  percentiles: [0.5, 0.75, 0.9, 0,95, 0.99]
 });
 
 // Histogram metric for measuring request durations
 const requestDurationHistogram = new prometheusClient.Histogram({
-    // Metric name
-    name: 'sample_app_histogram_request_duration_seconds',
+  // Metric name
+  name: 'sample_app_histogram_request_duration_seconds',
 
-    // Metric description
-    help: 'Histogram of request durations',
+  // Metric description
+  help: 'Histogram of request durations',
 
-    // Extra dimensions, or labels
-    // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-    labelNames: ['method', 'statuscode'],
+  // Extra dimensions, or labels
+  // HTTP method (GET, POST, etc), and status code (200, 500, etc)
+  labelNames: ['method', 'statuscode'],
 
-    // Duration buckets, in seconds
-    // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
-    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+  // Duration buckets, in seconds
+  // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 });
 ```
 
@@ -423,16 +423,16 @@ of requests, just so we can compare the average response time with
 ```js
 // Main route
 app.get('/', async (req, res) => {
-    // Simulate a 1s delay in ~5% of all requests
-    if (Math.random() <= 0.05) {
-        const sleep = (ms) => {
-            return new Promise((resolve) => {
-                setTimeout(resolve, ms);
-            });
-        };
-        await sleep(1000);
-    }
-    res.send('Hello, world!');
+  // Simulate a 1s delay in ~5% of all requests
+  if (Math.random() <= 0.05) {
+    const sleep = (ms) => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    };
+    await sleep(1000);
+  }
+  res.send('Hello, world!');
 });
 ```
 
@@ -501,19 +501,19 @@ Remembering our current histogram configuration:
 ```js
 // Histogram metric for measuring request durations
 const requestDurationHistogram = new prometheusClient.Histogram({
-    // Metric name
-    name: 'sample_app_histogram_request_duration_seconds',
+  // Metric name
+  name: 'sample_app_histogram_request_duration_seconds',
 
-    // Metric description
-    help: 'Histogram of request durations',
+  // Metric description
+  help: 'Histogram of request durations',
 
-    // Extra dimensions, or labels
-    // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-    labelNames: ['method', 'statuscode'],
+  // Extra dimensions, or labels
+  // HTTP method (GET, POST, etc), and status code (200, 500, etc)
+  labelNames: ['method', 'statuscode'],
 
-    // Duration buckets, in seconds
-    // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
-    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+  // Duration buckets, in seconds
+  // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 });
 ```
 
@@ -533,10 +533,10 @@ choose a more appropriate bucket layout:
 ```js
 // Histogram metric for measuring request durations
 const requestDurationHistogram = new prometheusClient.Histogram({
-    // ...
+  // ...
 
-    // Experimenting a different bucket layout
-    buckets: [0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 1.2, 1.5]
+  // Experimenting a different bucket layout
+  buckets: [0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 1.2, 1.5]
 });
 ```
 
