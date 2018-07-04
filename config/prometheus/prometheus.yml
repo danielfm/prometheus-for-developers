@@ -16,6 +16,12 @@ alerting:
 
 # Simple scrape configuration for each service
 scrape_configs:
+  # Uncomment this to scrape metrics from alertmanager as well
+  # - job_name: alertmanager
+  #   static_configs:
+  #     - targets:
+  #         - alertmanager:9093
+
   - job_name: prometheus
     static_configs:
       - targets:
