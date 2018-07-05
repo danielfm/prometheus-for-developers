@@ -1,15 +1,6 @@
 version: '3'
 
 services:
-  # Our sample Node.js application
-  sample-app:
-    build:
-      context: ./sample-app
-    volumes:
-      - ./sample-app/index.js:/usr/src/app/index.js
-    ports:
-      - 4000:4000
-
   # Prometheus is a monitoring and time-series database
   prometheus:
     image: prom/prometheus:v2.3.1
@@ -19,8 +10,6 @@ services:
       - ./config/prometheus/:/etc/prometheus/config/
     ports:
       - 9090:9090
-    depends_on:
-      - alertmanager
 
   # Alertmanager is the component responsible for de-duplicating and sending
   # alerts via different backends (i.e. PagerDuty, Slack, etc)
@@ -45,3 +34,12 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+
+  # Our sample Node.js application
+  sample-app:
+    build:
+      context: ./sample-app
+    volumes:
+      - ./sample-app/index.js:/usr/src/app/index.js
+    ports:
+      - 4000:4000
