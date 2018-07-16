@@ -673,8 +673,9 @@ hard time when creating queries later.
 
 ## References
 
-- <https://prometheus.io/docs/>
-- <https://www.robustperception.io/understanding-machine-cpu-usage/>
-- <http://latencytipoftheday.blogspot.com/2014/06/latencytipoftheday-you-cant-average.html>
-- <https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great/>
-- <https://github.com/siimon/prom-client>
+- [Prometheus documentation](https://prometheus.io/docs/)
+- [Prometheus client for Node.js](https://github.com/siimon/prom-client)
+- [Keynote: Monitoring, the Prometheus Way (DockerCon 2017)](https://www.youtube.com/watch?v=PDxcEzu62jk)
+- [Blog Post: Understanding Machine CPU usage](https://www.robustperception.io/understanding-machine-cpu-usage/)
+- [Blog Post: #LatencyTipOfTheDay: You can't average percentiles. Period.](http://latencytipoftheday.blogspot.com/2014/06/latencytipoftheday-you-cant-average.html)
+- [Blog Post: Why Averages Suck and Percentiles are Great](https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great/)
