@@ -432,6 +432,7 @@ app.get('/', async (req, res) => {
     };
     await sleep(1000);
   }
+  res.set('Content-Type', 'text/plain');
   res.send('Hello, world!');
 });
 ```

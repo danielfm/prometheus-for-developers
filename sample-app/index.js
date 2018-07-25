@@ -67,11 +67,13 @@ app.get('/', async (req, res) => {
     };
     await sleep(1000);
   }
+  res.set('Content-Type', 'text/plain');
   res.send('Hello, world!');
 });
 
 // Expose the collected metrics via the /metrics endpoint
 app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain');
   res.send(prometheusClient.register.metrics());
 });
 
