@@ -228,7 +228,15 @@ Prometheus UI):
 
 | Element | Value |
 |---------|-------|
-| process_resident_memory_bytes{instance="grafana:3000",job="grafana"} | 40861696@1530461477.446<br/>43298816@1530461482.447<br/>43778048@1530461487.451<br/>44785664@1530461492.447<br/>44785664@1530461497.447<br/>45043712@1530461502.448<br/>45043712@1530461507.44<br/>45301760@1530461512.451<br/>45301760@1530461517.448<br/>45301760@1530461522.448<br/>45895680@1530461527.448<br/>45895680@1530461532.447 |
+| `process_resident_memory_bytes{instance="grafana:3000",job="grafana"}` | `40861696@1530461477.446`<br/>`43298816@1530461482.447`<br/>`43778048@1530461487.451`<br/>`44785664@1530461492.447`<br/>`44785664@1530461497.447`<br/>`45043712@1530461502.448`<br/>`45043712@1530461507.44`<br/>`45301760@1530461512.451`<br/>`45301760@1530461517.448`<br/>`45301760@1530461522.448`<br/>`45895680@1530461527.448`<br/>`45895680@1530461532.447` |
+
+Queries that have an appended range duration in square brackets after
+the metric name (i.e. `<metric>[<duration>]`) returns what is called a
+_range vector_, in which `<duration>` specify how far back in time
+values should be fetched for each resulting range vector element.
+
+In this example, the value for the `process_resident_memory_bytes`
+metric at the timestamp `1530461477.446` was `40861696`, and so on.
 
 ### Duplicate Metrics Names?
 
