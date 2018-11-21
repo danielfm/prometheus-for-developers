@@ -24,6 +24,7 @@ me. Pull Requests are welcome!
     - [Quantile Estimation Errors](#quantile-estimation-errors)
   - [Measuring Throughput](#measuring-throughput)
   - [Measuring Memory/CPU Usage](#measuring-memorycpu-usage)
+  - [Monitoring SLOs and Error Budgets](#monitoring-slos-and-error-budgets)
   - [Monitoring Applications Without a Metrics Endpoint](#monitoring-applications-without-a-metrics-endpoint)
   - [Final Gotchas](#final-gotchas)
 - [References](#references)
@@ -317,18 +318,19 @@ Let's define our first alerting rule in
 `config/prometheus/prometheus.rules.yml`:
 
 ```yaml
-# Uptime alerting rule
 groups:
-- name: uptime
-  rules:
-  - alert: ServerDown
-    expr: up == 0
-    for: 1m
-    labels:
-      severity: page
-    annotations:
-      summary: One or more targets are down
-      description: Instance {{ $labels.instance }} of {{ $labels.job }} is down
+  - name: uptime
+    rules:
+      # Uptime alerting rule
+      # Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+      - alert: ServerDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: One or more targets are down
+          description: Instance {{ $labels.instance }} of {{ $labels.job }} is down
 ```
 
 Restart Prometheus with `docker-compose restart prometheus` and open the Alerts
@@ -652,6 +654,190 @@ Grafana server at <http://localhost:3000>.
 
 ---
 
+### Monitoring SLOs and Error Budgets
+
+> Managing service reliability is largely about managing risk, and managing risk
+> can be costly.
+>
+> 100% is probably never the right reliability target: not only is it impossible
+> to achieve, it's typically more reliability than a service's users want or
+> notice.
+
+SLOs, or _Service Level Objectives_, is one of the main tools employed by
+[Site Reliability Engineers (SREs)](https://landing.google.com/sre/books/) for
+making data-driven decisions about reliability.
+
+SLOs are based on SLIs, or _Service Level Indicators_, which are the key metrics
+that define how well (or how poorly) a given service is operating. Common SLIs
+would be the number of failed requests, the number of requests slower than some
+threshold, etc.
+
+Although different types of SLOs can be useful for different types of systems,
+most HTTP-based services will have at least two SLOs: one for **availability**,
+and one for **performance**.
+
+For instance, let's say these are the SLOs for our sample application:
+
+| Category | SLI | SLO |
+|-|-|-|
+| Availability | The proportion of successful requests; any HTTP status other than 500-599 is considered successful | 99% successful requests |
+| Latency      | The proportion of requests with duration less than or equal to 100ms | 99% requests under 100ms |
+
+The difference between 100% and the SLO is what we call the _Error Budget_.
+In this example, the error budget for the failed requests (the ones that return
+HTTP 5xx statuses) is 1%; if the application receives 1,000,000 requests
+during the SLO window, it means that 10,000 requests can fail and we'll still
+be within SLO.
+
+For us to start tracking our SLOs, all we need to do is increment a couple of
+counters:
+
+- `slo_requests_total`, _counter_, for counting the number of requests that
+  count against the SLO
+- `slo_errors_total`, _counter_, for counting the number of SLO violations
+
+The code would look something like this:
+
+```js
+// SLO Metrics
+const sloLatencyId = 'latency_p99_under_100ms';
+const sloAvailabilityId = 'availability_p99_success';
+
+// Counter for measuring the number of SLO-backed requests that hit the server
+const sloRequestsCounter = new prometheusClient.Counter({
+  name: 'slo_requests_total',
+  help: 'Number of SLO-backed requests that hit the server',
+  labelNames: ['slo_id']
+});
+
+// Counter for measuring the number of requests that violated a SLO
+const sloErrorsCounter = new prometheusClient.Counter({
+  name: 'slo_errors_total',
+  help: 'Number of requests that violated the SLO',
+  labelNames: ['slo_id']
+});
+
+// Set initial zero value for the SLO error counters
+sloErrorsCounter.inc({slo_id: sloAvailabilityId}, 0);
+sloErrorsCounter.inc({slo_id: sloLatencyId}, 0);
+
+// This middleware tracks our SLOs
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    const delta = process.hrtime(start);
+    const durationSecs = delta[0] + delta[1] / 1e9;
+
+    // Track served requests for each SLO
+    sloRequestsCounter.inc({slo_id: sloAvailabilityId});
+    sloRequestsCounter.inc({slo_id: sloLatencyId});
+
+    // Latency SLO violation: request takes more than 100ms
+    if (durationSecs > 0.1) {
+      sloErrorsCounter.inc({slo_id: sloLatencyId});
+    }
+
+    // Availability SLO violation: request returns HTTP 5xx
+    if (res.statusCode >= 500 && res.statusCode <= 599) {
+      sloErrorsCounter.inc({slo_id: sloAvailabilityId});
+    }
+  });
+  next();
+});
+```
+
+What this code does is increment the counters for the number of requests and
+SLO violations according to our SLO definition.
+
+With these metrics in place, we can try a few queries:
+
+```sh
+# Number of requests served in the SLO window (last week)
+sum(increase(slo_requests_total[1w])) by (job, slo_id)
+
+# Number of requests that violated the SLO in the same period
+sum(increase(slo_errors_total[1w])) by (job, slo_id)
+
+# Number of requests that can fail while still honoring the SLO: (100% - [slo threshold]) * [total requests]
+0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id)
+
+# Remaining requests in the error budget: [number of requests that can fail while still honoring the SLO] - [number of requests that violated the SLO]
+0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id) - sum(increase(slo_errors_total[1w])) by (job, slo_id)
+```
+
+We can also define
+[recording rules](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/)
+to make these queries easier to understand and faster to run on our Grafana
+dashboards. The Prometheus configuration provided with this repository already
+defined some recording rules for this purpose in
+`config/prometheus/prometheus.rules.yml`:
+
+```yaml
+groups:
+  # ...
+
+  - name: slo
+    rules:
+      # SLO recording rules
+      # Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
+
+      # Number of requests over the past week that can fail while still not exhausting the error budget (1%)
+      - record: job_slo_id:error_budget_available:1w
+        expr: 0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id)
+
+      # Unspent portion of the error budget; can be negative if we burn more than the budget allows
+      - record: job_slo_id:error_budget_remaining:1w
+        expr: (job_slo_id:error_budget_available:1w - sum(increase(slo_errors_total[1w])) by (job, slo_id)) / job_slo_id:error_budget_available:1w
+```
+
+Let's put some load on this server to generate some metrics for us to play with:
+
+```bash
+$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/metrics
+Running 5000m test @ http://localhost:4000/metrics
+  1 threads and 1 connections
+  ...
+```
+
+The `/metrics` endpoint returns very quickly, so the error budget for the
+latency SLO should remain untouched.
+
+![Untouched error budget](./img/slo-1.png)
+
+But if we hit the `/` URI instead, due to the simulated scenario in which 5% of
+requests takes 1s to complete, we should see the error budget starting to burn:
+
+```bash
+$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/
+Running 5000m test @ http://localhost:4000/
+  1 threads and 1 connections
+  ...
+```
+
+![Error budget being spent](./img/slo-2.png)
+
+After a while, the `HighErrorRate` alert should start firing as well:
+
+![HighErrorRate alert firing](./img/slo-alert.png)
+
+This alerting rule was extracted from the
+[Site Reliability Workbook](https://landing.google.com/sre/books), chapter
+_Alerting on SLOs_. In short, this alert checks the error budget burn rate,
+both in short and long time windows, to determine whether we are spending the
+error budget too fast.
+
+Change the `wrk` command line to hit the `/metrics` again to see the error
+budget slowly recover:
+
+```bash
+$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/metrics
+Running 5000m test @ http://localhost:4000/metrics
+  1 threads and 1 connections
+  ...
+```
+
+![Error budget restoring](./img/slo-3.png)
+
 ### Monitoring Applications Without a Metrics Endpoint
 
 We learned that Prometheus needs all applications to expose a `/metrics`
@@ -688,3 +874,4 @@ hard time when creating queries later.
 - [Blog Post: Understanding Machine CPU usage](https://www.robustperception.io/understanding-machine-cpu-usage/)
 - [Blog Post: #LatencyTipOfTheDay: You can't average percentiles. Period.](http://latencytipoftheday.blogspot.com/2014/06/latencytipoftheday-you-cant-average.html)
 - [Blog Post: Why Averages Suck and Percentiles are Great](https://www.dynatrace.com/news/blog/why-averages-suck-and-percentiles-are-great/)
+- [Site Reliability Engineering books](https://landing.google.com/sre/books/)

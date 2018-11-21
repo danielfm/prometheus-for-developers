@@ -15,8 +15,9 @@
   "description": "",
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
-  "iteration": 1530460697446,
+  "graphTooltip": 1,
+  "id": 2,
+  "iteration": 1542815768000,
   "links": [],
   "panels": [
     {
@@ -409,7 +410,9 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {}
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -488,12 +491,110 @@
       }
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 17
+      },
+      "id": 34,
+      "panels": [],
+      "title": "Service Level Objectives",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 36,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "job_slo_id:error_budget_remaining:1w",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{ slo_id }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Error Budget Burndown",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "percentunit",
+          "label": "remaining",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
       },
       "id": 19,
       "panels": [
@@ -1197,7 +1298,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 27
       },
       "id": 21,
       "panels": [
@@ -1213,7 +1314,7 @@
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 19
+            "y": 38
           },
           "id": 4,
           "legend": {
@@ -1299,7 +1400,7 @@
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 19
+            "y": 38
           },
           "id": 5,
           "legend": {
@@ -1385,7 +1486,7 @@
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 19
+            "y": 38
           },
           "id": 6,
           "legend": {
@@ -1465,7 +1566,6 @@
       "type": "row"
     }
   ],
-  "refresh": "10s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
@@ -1487,6 +1587,7 @@
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
+        "skipUrlSync": false,
         "type": "datasource"
       },
       {
@@ -1505,6 +1606,7 @@
         "query": "label_values(nodejs_active_requests_total, job)",
         "refresh": 1,
         "regex": "",
+        "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
@@ -1528,6 +1630,7 @@
         "query": "label_values(nodejs_active_requests_total{job=\"$job\"}, instance)",
         "refresh": 1,
         "regex": "",
+        "skipUrlSync": false,
         "sort": 2,
         "tagValuesQuery": "",
         "tags": [],

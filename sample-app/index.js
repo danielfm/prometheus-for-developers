@@ -28,10 +28,45 @@ const requestDurationHistogram = new prometheusClient.Histogram({
   help: 'Histogram of request durations',
   labelNames: ['method', 'statuscode'],
 
-  // Experiment different bucket layouts
+  // CHANGEME: Experiment different bucket layouts for matching the latency
+  // distribution more closely
   buckets:  [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
-  // buckets: [0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 1.2, 1.5]
 });
+
+// SLO Metrics
+const sloLatencyId = 'latency_p99_under_100ms';
+const sloAvailabilityId = 'availability_p99_success';
+
+// Request types for alerting purposes
+const requestTypes = {
+  CRITICAL:  'CRITICAL',  // Tightest SLO
+  HIGH_FAST: 'HIGH_FAST', // SLO for high-availability and low-latency functionality
+  HIGH_SLOW: 'HIGH_SLOW', // SLO for high-availability and high-latency functionality
+  LOW:       'LOW',       // SLO for lower availability functionality
+  NO_SLO:    'NO_SLO'     // Do not alert
+};
+
+// Counter for measuring the number of SLO-backed requests that hit the server
+const sloRequestsCounter = new prometheusClient.Counter({
+  name: 'slo_requests_total',
+  help: 'Number of SLO-backed requests that hit the server',
+  labelNames: ['slo_id', 'request_class']
+});
+
+// Counter for measuring the number of requests that violated a SLO
+const sloErrorsCounter = new prometheusClient.Counter({
+  name: 'slo_errors_total',
+  help: 'Number of requests that violated the SLO',
+  labelNames: ['slo_id', 'request_class']
+});
+
+// Set initial zero value for the SLO error counters
+for (const reqTypeIdx in requestTypes) {
+  const reqType = requestTypes[reqTypeIdx];
+
+  sloErrorsCounter.inc({slo_id: sloAvailabilityId, request_class: reqType}, 0);
+  sloErrorsCounter.inc({slo_id: sloLatencyId, request_class: reqType}, 0);
+};
 
 // CAUTION: The middlewares must be installed BEFORE the application routes
 // you want to measure.
@@ -50,6 +85,33 @@ app.use((req, res, next) => {
   const end = requestDurationHistogram.startTimer();
   res.on('finish', () => {
     end({method: req.method, statuscode: res.statusCode});
+  });
+  next();
+});
+
+// This middleware tracks our SLOs
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    const delta = process.hrtime(start);
+    const durationSecs = delta[0] + delta[1] / 1e9;
+
+    // Use the correct request type depending on the importance of the request
+    const reqClass = requestTypes.CRITICAL;
+
+    // Track served requests for each SLO
+    sloRequestsCounter.inc({slo_id: sloAvailabilityId, request_class: reqClass});
+    sloRequestsCounter.inc({slo_id: sloLatencyId, request_class: reqClass});
+
+    // Latency SLO violation: request takes more than 100ms
+    if (durationSecs > 0.1) {
+      sloErrorsCounter.inc({slo_id: sloLatencyId, request_class: reqClass});
+    }
+
+    // Availability SLO violation: request returns HTTP 5xx
+    if (res.statusCode >= 500 && res.statusCode <= 599) {
+      sloErrorsCounter.inc({slo_id: sloAvailabilityId, request_class: reqClass});
+    }
   });
   next();
 });
