@@ -15,9 +15,9 @@
   "description": "",
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 1,
+  "graphTooltip": 0,
   "id": 2,
-  "iteration": 1542815768000,
+  "iteration": 1542969674404,
   "links": [],
   "panels": [
     {
@@ -53,7 +53,7 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 4,
         "x": 0,
         "y": 1
@@ -95,7 +95,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", statuscode=~\"5..\"}[30s]) / rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s])",
+          "expr": "rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", status=~\"5..\"}[30s]) / rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s])",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -127,7 +127,7 @@
       "datasource": null,
       "fill": 1,
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 10,
         "x": 4,
         "y": 1
@@ -213,7 +213,7 @@
       "datasource": null,
       "fill": 1,
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 10,
         "x": 14,
         "y": 1
@@ -244,10 +244,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s])) by (statuscode)",
+          "expr": "sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s])) by (status)",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{ statuscode }}",
+          "legendFormat": "{{ status }}",
           "refId": "A"
         }
       ],
@@ -311,10 +311,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 4,
         "x": 0,
-        "y": 5
+        "y": 4
       },
       "id": 30,
       "interval": null,
@@ -353,7 +353,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", statuscode=~\"4..\"}[30s])) / sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s]))",
+          "expr": "sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", status=~\"4..\"}[30s])) / sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -385,10 +385,10 @@
       "datasource": null,
       "fill": 1,
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 7
       },
       "id": 32,
       "legend": {
@@ -491,110 +491,12 @@
       }
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 17
-      },
-      "id": 34,
-      "panels": [],
-      "title": "Service Level Objectives",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "id": 36,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "job_slo_id:error_budget_remaining:1w",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{ slo_id }}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Error Budget Burndown",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "percentunit",
-          "label": "remaining",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 13
       },
       "id": 19,
       "panels": [
@@ -622,7 +524,7 @@
             "h": 3,
             "w": 4,
             "x": 0,
-            "y": 18
+            "y": 14
           },
           "id": 9,
           "interval": null,
@@ -694,7 +596,7 @@
             "h": 6,
             "w": 20,
             "x": 4,
-            "y": 18
+            "y": 14
           },
           "id": 15,
           "legend": {
@@ -792,7 +694,7 @@
             "h": 3,
             "w": 4,
             "x": 0,
-            "y": 21
+            "y": 17
           },
           "id": 10,
           "interval": null,
@@ -864,7 +766,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 24
+            "y": 20
           },
           "id": 16,
           "legend": {
@@ -952,7 +854,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 24
+            "y": 20
           },
           "id": 17,
           "legend": {
@@ -1037,10 +939,10 @@
           "description": "Heap total size by type.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 0,
-            "y": 30
+            "y": 26
           },
           "id": 1,
           "legend": {
@@ -1124,10 +1026,10 @@
           "description": "Available heap by type.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 8,
-            "y": 30
+            "y": 26
           },
           "id": 2,
           "legend": {
@@ -1210,10 +1112,10 @@
           "description": "Heap usage by type.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 16,
-            "y": 30
+            "y": 26
           },
           "id": 3,
           "legend": {
@@ -1298,7 +1200,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 14
       },
       "id": 21,
       "panels": [
@@ -1311,10 +1213,10 @@
           "description": "Number of GC runs per minute.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 0,
-            "y": 38
+            "y": 33
           },
           "id": 4,
           "legend": {
@@ -1397,10 +1299,10 @@
           "description": "Average GC pause per run.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 8,
-            "y": 38
+            "y": 33
           },
           "id": 5,
           "legend": {
@@ -1483,10 +1385,10 @@
           "description": "Average amount of memory reclaimed per GC run.",
           "fill": 1,
           "gridPos": {
-            "h": 7,
+            "h": 6,
             "w": 8,
             "x": 16,
-            "y": 38
+            "y": 33
           },
           "id": 6,
           "legend": {
@@ -1566,6 +1468,7 @@
       "type": "row"
     }
   ],
+  "refresh": "10s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
@@ -1672,5 +1575,5 @@
   "timezone": "utc",
   "title": "Sample Node.js Application",
   "uid": "000000003",
-  "version": 1
+  "version": 11
 }

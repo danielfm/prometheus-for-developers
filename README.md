@@ -396,7 +396,7 @@ const requestDurationSummary = new prometheusClient.Summary({
 
   // Extra dimensions, or labels
   // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-  labelNames: ['method', 'statuscode'],
+  labelNames: ['method', 'status'],
 
   // 50th (median), 75th, 90th, 95th, and 99th percentiles
   percentiles: [0.5, 0.75, 0.9, 0,95, 0.99]
@@ -412,7 +412,7 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 
   // Extra dimensions, or labels
   // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-  labelNames: ['method', 'statuscode'],
+  labelNames: ['method', 'status'],
 
   // Duration buckets, in seconds
   // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
@@ -472,7 +472,7 @@ rate(sample_app_summary_request_duration_seconds_sum[15s]) / rate(sample_app_sum
 sample_app_summary_request_duration_seconds{quantile="0.99"}
 
 # 99th percentile (via histogram)
-histogram_quantile(0.99, sum(rate(sample_app_histogram_request_duration_seconds_bucket[15s])) by (le, method, statuscode))
+histogram_quantile(0.99, sum(rate(sample_app_histogram_request_duration_seconds_bucket[15s])) by (le, method, status))
 ```
 
 The result of these queries may seem surprising.
@@ -520,7 +520,7 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 
   // Extra dimensions, or labels
   // HTTP method (GET, POST, etc), and status code (200, 500, etc)
-  labelNames: ['method', 'statuscode'],
+  labelNames: ['method', 'status'],
 
   // Duration buckets, in seconds
   // 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
@@ -670,173 +670,86 @@ making data-driven decisions about reliability.
 SLOs are based on SLIs, or _Service Level Indicators_, which are the key metrics
 that define how well (or how poorly) a given service is operating. Common SLIs
 would be the number of failed requests, the number of requests slower than some
-threshold, etc.
-
-Although different types of SLOs can be useful for different types of systems,
-most HTTP-based services will have at least two SLOs: one for **availability**,
-and one for **performance**.
+threshold, etc. Although different types of SLOs can be useful for different
+types of systems, most HTTP-based services will have at least two SLOs: one
+for **availability**, and one for **performance**.
 
 For instance, let's say these are the SLOs for our sample application:
 
 | Category | SLI | SLO |
 |-|-|-|
-| Availability | The proportion of successful requests; any HTTP status other than 500-599 is considered successful | 99% successful requests |
-| Latency      | The proportion of requests with duration less than or equal to 100ms | 99% requests under 100ms |
+| Availability | The proportion of successful requests; any HTTP status other than 500-599 is considered successful | 95% successful requests |
+| Latency      | The proportion of requests with duration less than or equal to 100ms | 95% requests under 100ms |
 
 The difference between 100% and the SLO is what we call the _Error Budget_.
-In this example, the error budget for the failed requests (the ones that return
-HTTP 5xx statuses) is 1%; if the application receives 1,000,000 requests
-during the SLO window, it means that 10,000 requests can fail and we'll still
-be within SLO.
+In this example, the error budget for both SLOs is 5%; if the application
+receives 1,000 requests during the SLO window (let's say one minute), it
+means that 50 requests can fail and we'll still be within our SLO.
 
-For us to start tracking our SLOs, all we need to do is increment a couple of
-counters:
+But do we need additional metrics for keeping track of our SLOs? Probably not.
+If you are tracking request durations with a histogram (as we are here),
+chances are you don't need to do anything else, you already got all the
+metrics you need!
 
-- `slo_requests_total`, _counter_, for counting the number of requests that
-  count against the SLO
-- `slo_errors_total`, _counter_, for counting the number of SLO violations
-
-The code would look something like this:
-
-```js
-// SLO Metrics
-const sloLatencyId = 'latency_p99_under_100ms';
-const sloAvailabilityId = 'availability_p99_success';
-
-// Counter for measuring the number of SLO-backed requests that hit the server
-const sloRequestsCounter = new prometheusClient.Counter({
-  name: 'slo_requests_total',
-  help: 'Number of SLO-backed requests that hit the server',
-  labelNames: ['slo_id']
-});
-
-// Counter for measuring the number of requests that violated a SLO
-const sloErrorsCounter = new prometheusClient.Counter({
-  name: 'slo_errors_total',
-  help: 'Number of requests that violated the SLO',
-  labelNames: ['slo_id']
-});
-
-// Set initial zero value for the SLO error counters
-sloErrorsCounter.inc({slo_id: sloAvailabilityId}, 0);
-sloErrorsCounter.inc({slo_id: sloLatencyId}, 0);
-
-// This middleware tracks our SLOs
-app.use((req, res, next) => {
-  const start = process.hrtime();
-  res.on('finish', () => {
-    const delta = process.hrtime(start);
-    const durationSecs = delta[0] + delta[1] / 1e9;
-
-    // Track served requests for each SLO
-    sloRequestsCounter.inc({slo_id: sloAvailabilityId});
-    sloRequestsCounter.inc({slo_id: sloLatencyId});
-
-    // Latency SLO violation: request takes more than 100ms
-    if (durationSecs > 0.1) {
-      sloErrorsCounter.inc({slo_id: sloLatencyId});
-    }
-
-    // Availability SLO violation: request returns HTTP 5xx
-    if (res.statusCode >= 500 && res.statusCode <= 599) {
-      sloErrorsCounter.inc({slo_id: sloAvailabilityId});
-    }
-  });
-  next();
-});
-```
-
-What this code does is increment the counters for the number of requests and
-SLO violations according to our SLO definition.
-
-With these metrics in place, we can try a few queries:
+Let's send a few requests to the server so we can play around with the metrics:
 
 ```sh
-# Number of requests served in the SLO window (last week)
-sum(increase(slo_requests_total[1w])) by (job, slo_id)
-
-# Number of requests that violated the SLO in the same period
-sum(increase(slo_errors_total[1w])) by (job, slo_id)
-
-# Number of requests that can fail while still honoring the SLO: (100% - [slo threshold]) * [total requests]
-0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id)
-
-# Remaining requests in the error budget: [number of requests that can fail while still honoring the SLO] - [number of requests that violated the SLO]
-0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id) - sum(increase(slo_errors_total[1w])) by (job, slo_id)
+$ while true; do curl -s http://localhost:4000 > /dev/null ; done
 ```
 
-We can also define
-[recording rules](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/)
-to make these queries easier to understand and faster to run on our Grafana
-dashboards. The Prometheus configuration provided with this repository already
-defined some recording rules for this purpose in
-`config/prometheus/prometheus.rules.yml`:
+```sh
+# Number of requests served in the SLO window
+sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job)
 
-```yaml
-groups:
-  # ...
+# Number of requests that violated the latency SLO (all requests that took more than 100ms to be served)
+sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job)
 
-  - name: slo
-    rules:
-      # SLO recording rules
-      # Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
+# Number of requests in the error budget: (100% - [slo threshold]) * [number of requests served]
+0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job)
 
-      # Number of requests over the past week that can fail while still not exhausting the error budget (1%)
-      - record: job_slo_id:error_budget_available:1w
-        expr: 0.01 * sum(increase(slo_requests_total[1w])) by (job, slo_id)
+# Remaining requests in the error budget: [number of requests in the error budget] - [number of requests that violated the SLO]
+0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))
 
-      # Unspent portion of the error budget; can be negative if we burn more than the budget allows
-      - record: job_slo_id:error_budget_remaining:1w
-        expr: (job_slo_id:error_budget_available:1w - sum(increase(slo_errors_total[1w])) by (job, slo_id)) / job_slo_id:error_budget_available:1w
+# Remaining requests in the error budget as a ratio: ([number of requests in the error budget] - [number of requests that violated the SLO]) / [number of requests in the error budget]
+(0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))) / (0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job))
 ```
 
-Let's put some load on this server to generate some metrics for us to play with:
+Due to the simulated scenario in which ~5% of requests takes 1s to complete,
+if you try the last query you should see that the average budget available
+is around 0%, that is, we have no more budget to spend and will inevitably
+break the latency SLO if more requests start to take more time to be served.
+This is not a good place to be.
+
+![Error Budget Burn Rate of 1x](./img/slo-1.png)
+
+But what if we had a more strict SLO, say, 99% instead of 95%? What would be
+the impact of these slow requests to the error budget?
+
+Just replace the `0.05` by `0.01` in that query to see what would happen:
+
+![Error Budget Burn Rate of 3x](./img/slo-2.png)
+
+In the previous scenario with the 95% SLO, the SLO _burn rate_ was ~1x, which
+means the whole error budget was being consumed during the SLO window, that is,
+in 60 seconds. Now, with the 99% SLO, the burn rate was ~3x, which means that
+instead of taking one minute for the error budget to exhaust, it now takes
+only ~20 seconds!
+
+Now change the `curl` to point to the `/metrics` endpoint, which do not have
+the simulated long latency for 5% of the requests, and you should see the error
+budget go back to 100% again:
 
 ```bash
-$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/metrics
-Running 5000m test @ http://localhost:4000/metrics
-  1 threads and 1 connections
-  ...
+$ while true; do curl -s http://localhost:4000/metrics > /dev/null ; done
 ```
 
-The `/metrics` endpoint returns very quickly, so the error budget for the
-latency SLO should remain untouched.
+![Error Budget Replenished](./img/slo-3.png)
 
-![Untouched error budget](./img/slo-1.png)
+---
 
-But if we hit the `/` URI instead, due to the simulated scenario in which 5% of
-requests takes 1s to complete, we should see the error budget starting to burn:
+**Want to know more?** TODO
 
-```bash
-$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/
-Running 5000m test @ http://localhost:4000/
-  1 threads and 1 connections
-  ...
-```
-
-![Error budget being spent](./img/slo-2.png)
-
-After a while, the `HighErrorRate` alert should start firing as well:
-
-![HighErrorRate alert firing](./img/slo-alert.png)
-
-This alerting rule was extracted from the
-[Site Reliability Workbook](https://landing.google.com/sre/books), chapter
-_Alerting on SLOs_. In short, this alert checks the error budget burn rate,
-both in short and long time windows, to determine whether we are spending the
-error budget too fast.
-
-Change the `wrk` command line to hit the `/metrics` again to see the error
-budget slowly recover:
-
-```bash
-$ docker run --rm -it --net host williamyeh/wrk -c 4 -t 2 -d 300000 http://localhost:4000/metrics
-Running 5000m test @ http://localhost:4000/metrics
-  1 threads and 1 connections
-  ...
-```
-
-![Error budget restoring](./img/slo-3.png)
+---
 
 ### Monitoring Applications Without a Metrics Endpoint
 

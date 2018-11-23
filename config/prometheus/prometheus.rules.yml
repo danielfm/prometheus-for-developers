@@ -11,38 +11,3 @@ groups:
         annotations:
           summary: One or more targets are down
           description: Instance {{ $labels.instance }} of {{ $labels.job }} is down
-
-  - name: slo
-    rules:
-      # SLO recording rules
-      # Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
-
-      # Number of requests over the past week that can fail while still not exhausting the error budget (1%)
-      - record: job_slo_id:error_budget_available:1w
-        expr: (1 - max(slo_target_threshold) by (job, slo_id)) * sum(increase(slo_requests_total[1w])) by (job, slo_id)
-
-      # Unspent portion of the error budget; can be negative if we burn more than the budget allows
-      - record: job_slo_id:error_budget_remaining:1w
-        expr: (job_slo_id:error_budget_available:1w - sum(increase(slo_errors_total[1w])) by (job, slo_id)) / job_slo_id:error_budget_available:1w
-
-      # SLO alerting rules
-
-      # Example taken from 'The Site Reliability Workbook'
-      - alert: HighErrorRate
-        expr: |
-          (
-            sum(rate(slo_errors_total[1h])) by (job, slo_id) > (14.4 * 0.01)
-            and
-            sum(rate(slo_errors_total[5m])) by (job, slo_id) > (14.4 * 0.01)
-          )
-          or
-          (
-            sum(rate(slo_errors_total[6h])) by (job, slo_id) > (6 * 0.01)
-            and
-            sum(rate(slo_errors_total[30m])) by (job, slo_id) > (6 * 0.01)
-          )
-        labels:
-          severity: page
-        annotations:
-          summary: SLO {{ $labels.slo_id }} is at risk of not being met
-          description: Error budget for the SLO {{ $labels.slo_id }} for job {{ $labels.job }} is being consumed too fast
