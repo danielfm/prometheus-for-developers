@@ -1,7 +1,7 @@
 # Prometheus For Developers
 
-This is an introductory tutorial/workshop I created for telling the software
-developers in my [company](https://descomplica.com.br) the basics about
+This is an introductory tutorial I created for telling the software developers
+in my [company](https://descomplica.com.br) the basics about
 [Prometheus](https://prometheus.io).
 
 If you have any suggestion to improve this content, don't hesitate to contact
@@ -9,7 +9,7 @@ me. Pull Requests are welcome!
 
 ## Table of Contents
 
-- [Workshop Project](#workshop-project)
+- [The Project](#the-project)
   - [Pre-Requisites](#pre-requisites)
   - [Running the Code](#running-the-code)
   - [Cleaning Up](#cleaning-up)
@@ -24,14 +24,14 @@ me. Pull Requests are welcome!
     - [Quantile Estimation Errors](#quantile-estimation-errors)
   - [Measuring Throughput](#measuring-throughput)
   - [Measuring Memory/CPU Usage](#measuring-memorycpu-usage)
-  - [Monitoring SLOs and Error Budgets](#monitoring-slos-and-error-budgets)
+  - [Measuring SLOs and Error Budgets](#measuring-slos-and-error-budgets)
   - [Monitoring Applications Without a Metrics Endpoint](#monitoring-applications-without-a-metrics-endpoint)
   - [Final Gotchas](#final-gotchas)
 - [References](#references)
 
-## Workshop Project
+## The Project
 
-This workshop follows a more practical approach (with hopefully just the
+This tutorial follows a more practical approach (with hopefully just the
 right amount of theory!), so we provide a simple Docker Compose configuration
 for simplifying the project bootstrap.
 
@@ -312,9 +312,9 @@ to the correct receiver integration (i.e. email, Slack, PagerDuty,
 OpsGenie). It also takes care of silencing and inhibition of alerts.
 
 Configuring Alertmanager to send metrics to PagerDuty, or Slack, or whatever,
-is out of the scope of this workshop, but we can still play around with alerts.
+is out of the scope of this tutorial, but we can still play around with alerts.
 
-Let's define our first alerting rule in
+We already have the following alerting rule defined in
 `config/prometheus/prometheus.rules.yml`:
 
 ```yaml
@@ -332,9 +332,6 @@ groups:
           summary: One or more targets are down
           description: Instance {{ $labels.instance }} of {{ $labels.job }} is down
 ```
-
-Restart Prometheus with `docker-compose restart prometheus` and open the Alerts
-page at <http://localhost:9090/alerts>.
 
 ![Prometheus alerts](./img/prometheus-alerts-1.png)
 
@@ -365,7 +362,7 @@ should go back to a green state after a few seconds.
 
 ## Instrumenting Your Applications
 
-Let's examine a sample Node.js application we created for this workshop.
+Let's examine a sample Node.js application we created for this tutorial.
 
 Open the `./sample-app/index.js` file in your favorite text editor. The
 code is fully commented, so you should not have a hard time understanding
@@ -375,15 +372,21 @@ it.
 
 We can measure request durations with
 [percentiles](https://en.wikipedia.org/wiki/Quantile) or
-[averages](https://en.wikipedia.org/wiki/Arithmetic_mean). However,
-it's not recommended relying on averages to track request durations because
-averages can be very misleading (see the [References](#references) for a few
-posts on the pitfalls of averages and how percentiles can help).
+[averages](https://en.wikipedia.org/wiki/Arithmetic_mean). It's not
+recommended relying on averages to track request durations because averages
+can be very misleading (see the [References](#references) for a few posts on
+the pitfalls of averages and how percentiles can help). A better way for
+measuring durations is via percentiles as it tracks the user experience
+more closely:
+
+![Percentiles as a way to measure user satisfaction](./img/percentiles.jpg)
+Source: [Twitter](https://twitter.com/rakyll/status/1045075510538035200)
 
 In Prometheus, we can generate percentiles with summaries or histograms.
 
 To show the differences between these two, our sample application exposes
-two custom metrics for measuring request durations with:
+two custom metrics for measuring request durations with, one via a summary
+and the other via a histogram:
 
 ```js
 // Summary metric for measuring request durations
@@ -420,11 +423,11 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 });
 ```
 
-As you can see, in a summary we specify the percentiles in which we
-want the Prometheus client to calculate and report latencies, while in a
-histogram we specify the buckets where the observed durations will be
-classified (i.e. a 300ms duration will be stored in the 250ms-500ms
-bucket).
+As you can see, in a summary we specify the percentiles in which we want the
+Prometheus client to calculate and report latencies for, while in a histogram
+we specify the duration buckets in which the observed durations will be stored
+as a counter (i.e. a 300ms observation will be stored by incrementing the
+counter corresponding to the 250ms-500ms bucket).
 
 Our sample application introduces a one-second delay in approximately 5%
 of requests, just so we can compare the average response time with
@@ -503,7 +506,7 @@ Quoting the [documentation]():
 > `histogram_quantile()` function.
 
 In other words, for the quantile estimation from the buckets of a
-histogram to be accurate, we need to be careful when picking the bucket
+histogram to be accurate, we need to be careful when choosing the bucket
 layout; if it doesn't match the range and distribution of the actual
 observed durations, you will get inaccurate quantiles as a result.
 
@@ -529,14 +532,14 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 ```
 
 Here we are using a _exponential_ bucket configuration in which the buckets
-get larger as latency gets bigger. This is a widely used pattern; since we
+double in size at every step. This is a widely used pattern; since we
 always expect our services to respond quickly (i.e. with response time
 between 0 and 300ms), we specify more buckets for that range, and fewer
 buckets for request durations we think are less likely to occur.
 
 According to the previous plot, all slow requests from our application
-is falling into the 1s-2.5s bucket, causing us to lose precision when
-calculating the 99th percentile.
+are falling into the 1s-2.5s bucket, resulting in this loss of precision
+when calculating the 99th percentile.
 
 Since we know our application will take at most ~1s to respond, we can
 choose a more appropriate bucket layout:
@@ -575,10 +578,10 @@ The reason is efficiency. Remember:
 
 **more buckets == more time series == more space == slower queries**
 
-Let's say you have an SLA to serve 99% of requests within 300ms. If all
-you want to know is whether you are honoring your SLA or not, it doesn't
-really matter if the quantile estimation is not accurate for requests
-slower than 300ms.
+Let's say you have an SLO (more details on SLOs later) to serve 99% of
+requests within 300ms. If all you want to know is whether you are
+honoring your SLO or not, it doesn't really matter if the quantile
+estimation is not accurate for requests slower than 300ms.
 
 You might also be wondering: if summaries are more precise, why not use
 summaries instead of histograms?
@@ -654,7 +657,7 @@ Grafana server at <http://localhost:3000>.
 
 ---
 
-### Monitoring SLOs and Error Budgets
+### Measuring SLOs and Error Budgets
 
 > Managing service reliability is largely about managing risk, and managing risk
 > can be costly.
@@ -671,8 +674,8 @@ SLOs are based on SLIs, or _Service Level Indicators_, which are the key metrics
 that define how well (or how poorly) a given service is operating. Common SLIs
 would be the number of failed requests, the number of requests slower than some
 threshold, etc. Although different types of SLOs can be useful for different
-types of systems, most HTTP-based services will have at least two SLOs: one
-for **availability**, and one for **performance**.
+types of systems, most HTTP-based services will have SLOs that can be
+classified into two categories: **availability** and **latency**.
 
 For instance, let's say these are the SLOs for our sample application:
 
@@ -683,12 +686,13 @@ For instance, let's say these are the SLOs for our sample application:
 
 The difference between 100% and the SLO is what we call the _Error Budget_.
 In this example, the error budget for both SLOs is 5%; if the application
-receives 1,000 requests during the SLO window (let's say one minute), it
-means that 50 requests can fail and we'll still be within our SLO.
+receives 1,000 requests during the SLO window (let's say one minute for the
+purposes of this tutorial), it means that 50 requests can fail and we'll
+still meet our SLO.
 
-But do we need additional metrics for keeping track of our SLOs? Probably not.
-If you are tracking request durations with a histogram (as we are here),
-chances are you don't need to do anything else, you already got all the
+But do we need additional metrics for keeping track of these SLOs? Probably
+not. If you are tracking request durations with a histogram (as we are here),
+chances are you don't need to do anything else. You already got all the
 metrics you need!
 
 Let's send a few requests to the server so we can play around with the metrics:
@@ -705,13 +709,13 @@ sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job)
 sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job)
 
 # Number of requests in the error budget: (100% - [slo threshold]) * [number of requests served]
-0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job)
+(1 - 0.95) * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job)
 
-# Remaining requests in the error budget: [number of requests in the error budget] - [number of requests that violated the SLO]
-0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))
+# Remaining requests in the error budget: [number of requests in the error budget] - [number of requests that violated the latency SLO]
+(1 - 0.95) * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))
 
 # Remaining requests in the error budget as a ratio: ([number of requests in the error budget] - [number of requests that violated the SLO]) / [number of requests in the error budget]
-(0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))) / (0.05 * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job))
+((1 - 0.95) * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - (sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job) - sum(increase(sample_app_histogram_request_duration_seconds_bucket{le="0.1"}[1m])) by (job))) / ((1 - 0.95) * sum(increase(sample_app_histogram_request_duration_seconds_count[1m])) by (job))
 ```
 
 Due to the simulated scenario in which ~5% of requests takes 1s to complete,
@@ -723,9 +727,9 @@ This is not a good place to be.
 ![Error Budget Burn Rate of 1x](./img/slo-1.png)
 
 But what if we had a more strict SLO, say, 99% instead of 95%? What would be
-the impact of these slow requests to the error budget?
+the impact of these slow requests on the error budget?
 
-Just replace the `0.05` by `0.01` in that query to see what would happen:
+Just replace all `0.95` by `0.99` in that query to see what would happen:
 
 ![Error Budget Burn Rate of 3x](./img/slo-2.png)
 
@@ -747,7 +751,11 @@ $ while true; do curl -s http://localhost:4000/metrics > /dev/null ; done
 
 ---
 
-**Want to know more?** TODO
+**Want to know more?** The
+[Site Reliability Workbook](https://landing.google.com/sre/books/) is a great
+resource on this topic and includes more advanced concepts such as how to alert
+based on SLO burn rate as a way to improve alert precision/recall and
+detection/reset times.
 
 ---
 
