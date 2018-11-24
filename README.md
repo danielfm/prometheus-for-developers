@@ -598,7 +598,8 @@ with multiple replicas, you can safely use the `histogram_quantile()`
 function to calculate the 99th percentile across all requests to all
 replicas. You cannot do this with summaries. I mean, you can `avg()` the
 99th percentiles of all replicas, or take the `max()`, but the value you
-get will be statistically incorrect.
+get will be statistically incorrect and could not be used as a proxy to the
+99th percentile.
 
 ---
 
