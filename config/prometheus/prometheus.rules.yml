@@ -1,13 +1,13 @@
-# Uptime alerting rule
-
-# groups:
-# - name: uptime
-#   rules:
-#     - alert: ServerDown
-#       expr: up == 0
-#       for: 1m
-#       labels:
-#         severity: page
-#       annotations:
-#         summary: One or more targets are down
-#         description: Instance {{ $labels.instance }} of {{ $labels.job }} is down
+groups:
+  - name: uptime
+    rules:
+      # Uptime alerting rule
+      # Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+      - alert: ServerDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: One or more targets are down
+          description: Instance {{ $labels.instance }} of {{ $labels.job }} is down

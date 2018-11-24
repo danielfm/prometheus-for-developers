@@ -18,7 +18,7 @@ startGcStats();
 const requestDurationSummary = new prometheusClient.Summary({
   name: 'sample_app_summary_request_duration_seconds',
   help: 'Summary of request durations',
-  labelNames: ['method', 'statuscode'],
+  labelNames: ['method', 'status'],
   percentiles: [0.5, 0.75, 0.9, 0.95, 0.99]
 });
 
@@ -26,11 +26,11 @@ const requestDurationSummary = new prometheusClient.Summary({
 const requestDurationHistogram = new prometheusClient.Histogram({
   name: 'sample_app_histogram_request_duration_seconds',
   help: 'Histogram of request durations',
-  labelNames: ['method', 'statuscode'],
+  labelNames: ['method', 'status'],
 
-  // Experiment different bucket layouts
+  // CHANGEME: Experiment different bucket layouts for matching the latency
+  // distribution more closely
   buckets:  [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
-  // buckets: [0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8, 1, 1.2, 1.5]
 });
 
 // CAUTION: The middlewares must be installed BEFORE the application routes
@@ -40,7 +40,7 @@ const requestDurationHistogram = new prometheusClient.Histogram({
 app.use((req, res, next) => {
   const end = requestDurationSummary.startTimer();
   res.on('finish', () => {
-    end({method: req.method, statuscode: res.statusCode});
+    end({method: req.method, status: res.statusCode});
   });
   next();
 });
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const end = requestDurationHistogram.startTimer();
   res.on('finish', () => {
-    end({method: req.method, statuscode: res.statusCode});
+    end({method: req.method, status: res.statusCode});
   });
   next();
 });
