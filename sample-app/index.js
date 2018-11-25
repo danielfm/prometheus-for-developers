@@ -22,6 +22,10 @@ const requestDurationSummary = new prometheusClient.Summary({
   percentiles: [0.5, 0.75, 0.9, 0.95, 0.99]
 });
 
+// Set counters to zero on relevant label combinations
+requestDurationSummary.observe({method: "GET", status: "404"}, 0);
+requestDurationSummary.observe({method: "GET", status: "500"}, 0);
+
 // Histogram metric for measuring request durations
 const requestDurationHistogram = new prometheusClient.Histogram({
   name: 'sample_app_histogram_request_duration_seconds',
@@ -32,6 +36,10 @@ const requestDurationHistogram = new prometheusClient.Histogram({
   // distribution more closely
   buckets:  [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 });
+
+// Set counters to zero on relevant label combinations
+requestDurationHistogram.observe({method: "GET", status: "404"}, 0);
+requestDurationHistogram.observe({method: "GET", status: "500"}, 0);
 
 // CAUTION: The middlewares must be installed BEFORE the application routes
 // you want to measure.

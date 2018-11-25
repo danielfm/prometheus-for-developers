@@ -752,7 +752,14 @@ $ while true; do curl -s http://localhost:4000/metrics > /dev/null ; done
 
 ---
 
-**Want to know more?** The
+**Want to know more?** These queries are for calculating the error budget for
+the **latency** SLO by measuring the number of requests slower than 100ms. Now
+try to modify those queries to calculate the error budget for the
+**availability** SLO (requests with `status=~"5.."`), and modify the sample
+application to return a HTTP 5xx error for some requests so you can validate
+the queries.
+
+The
 [Site Reliability Workbook](https://landing.google.com/sre/books/) is a great
 resource on this topic and includes more advanced concepts such as how to alert
 based on SLO burn rate as a way to improve alert precision/recall and

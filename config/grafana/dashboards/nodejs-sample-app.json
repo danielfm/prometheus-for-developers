@@ -17,7 +17,6 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 2,
-  "iteration": 1542969674404,
   "links": [],
   "panels": [
     {
@@ -95,7 +94,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", status=~\"5..\"}[30s]) / rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s])",
+          "expr": "sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\", status=~\"5..\"}[30s])) / sum(rate(sample_app_histogram_request_duration_seconds_count{job=\"$job\", instance=\"$instance\"}[30s]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -105,18 +104,7 @@
       "title": "5xx Error Rate (30s)",
       "type": "singlestat",
       "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "None",
-          "value": "null"
-        },
-        {
-          "op": "=",
-          "text": "None",
-          "value": "0"
-        }
-      ],
+      "valueMaps": [],
       "valueName": "current"
     },
     {
@@ -363,18 +351,7 @@
       "title": "4xx Error Rate (30s)",
       "type": "singlestat",
       "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "None",
-          "value": "null"
-        },
-        {
-          "op": "=",
-          "text": "None",
-          "value": "0"
-        }
-      ],
+      "valueMaps": [],
       "valueName": "current"
     },
     {
@@ -1575,5 +1552,5 @@
   "timezone": "utc",
   "title": "Sample Node.js Application",
   "uid": "000000003",
-  "version": 11
+  "version": 14
 }
