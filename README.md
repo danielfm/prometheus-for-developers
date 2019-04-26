@@ -72,6 +72,7 @@ from jobs running in their cluster orchestration platform,
 The following image shows an overview of the Prometheus architecture.
 
 ![Prometheus architecture](./img/prometheus-architecture.png)
+Source: [Prometheus documentation](https://prometheus.io/docs/introduction/overview/)
 
 In the center we have a **Prometheus server**, which is the component
 responsible for periodically collecting and storing metrics from various
