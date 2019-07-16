@@ -3,7 +3,7 @@ version: '3'
 services:
   # Prometheus is a monitoring and time-series database
   prometheus:
-    image: prom/prometheus:v2.5.0
+    image: prom/prometheus:v2.11.1
     restart: on-failure
     command: --config.file=/etc/prometheus/config/prometheus.yml
     volumes:
@@ -14,7 +14,7 @@ services:
   # Alertmanager is the component responsible for de-duplicating and sending
   # alerts via different backends (i.e. PagerDuty, Slack, etc)
   alertmanager:
-    image: prom/alertmanager:v0.15.3
+    image: prom/alertmanager:v0.18.0
     restart: on-failure
     ports:
       - 9093:9093
@@ -22,7 +22,7 @@ services:
   # Grafana can be used for creating nice dashboards based on the data stored
   # in Prometheus
   grafana:
-    image: grafana/grafana:5.3.4
+    image: grafana/grafana:6.2.5
     restart: on-failure
     environment:
       GF_LOG_LEVEL: debug
