@@ -361,6 +361,14 @@ After that point, the alert will show up in Alertmanager. Visit
 Let's restore Grafana. Run `docker-compose restart grafana` and the alert
 should go back to a green state after a few seconds.
 
+---
+
+**Want to know more?** There are several alerting rule examples in the
+[awesome-prometheus-alerts](https://github.com/samber/awesome-prometheus-alerts)
+repository for common scenarios and popular systems.
+
+---
+
 ## Instrumenting Your Applications
 
 Let's examine a sample Node.js application we created for this tutorial.
