@@ -807,6 +807,7 @@ hard time when creating queries later.
 ## References
 
 - [Prometheus documentation](https://prometheus.io/docs/)
+- [Prometheus example queries](https://github.com/infinityworks/prometheus-example-queries)
 - [Prometheus client for Node.js](https://github.com/siimon/prom-client)
 - [Keynote: Monitoring, the Prometheus Way (DockerCon 2017)](https://www.youtube.com/watch?v=PDxcEzu62jk)
 - [Blog Post: Understanding Machine CPU usage](https://www.robustperception.io/understanding-machine-cpu-usage/)
