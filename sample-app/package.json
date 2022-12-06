@@ -4,7 +4,7 @@
   "description": "Sample Node.js application for demoing Prometheus metrics",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.16.3",
+    "express": "^4.18.2",
     "prom-client": "^11.1.1",
     "prometheus-gc-stats": "^0.5.1"
   },
