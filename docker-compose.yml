@@ -3,18 +3,18 @@ version: '3'
 services:
   # Prometheus is a monitoring and time-series database
   prometheus:
-    image: prom/prometheus:v2.11.1
+    image: prom/prometheus:v3.8.1
     restart: on-failure
     command: --config.file=/etc/prometheus/config/prometheus.yml
     volumes:
-      - ./config/prometheus/:/etc/prometheus/config/
+      - ./config/prometheus/:/etc/prometheus/config/:ro,Z
     ports:
       - 9090:9090
 
   # Alertmanager is the component responsible for de-duplicating and sending
   # alerts via different backends (i.e. PagerDuty, Slack, etc)
   alertmanager:
-    image: prom/alertmanager:v0.18.0
+    image: prom/alertmanager:v0.30.0
     restart: on-failure
     ports:
       - 9093:9093
@@ -22,14 +22,14 @@ services:
   # Grafana can be used for creating nice dashboards based on the data stored
   # in Prometheus
   grafana:
-    image: grafana/grafana:6.2.5
+    image: grafana/grafana:12.3
     restart: on-failure
     environment:
       GF_LOG_LEVEL: debug
     volumes:
-      - ./config/grafana/datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml
-      - ./config/grafana/dashboard-providers.yml:/etc/grafana/provisioning/dashboards/dashboard-providers.yml
-      - ./config/grafana/dashboards/:/var/lib/grafana/dashboards/
+      - ./config/grafana/datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro,Z
+      - ./config/grafana/dashboard-providers.yml:/etc/grafana/provisioning/dashboards/dashboard-providers.yml:ro,Z
+      - ./config/grafana/dashboards/:/var/lib/grafana/dashboards/:ro,Z
     ports:
       - 3000:3000
     depends_on:
@@ -40,6 +40,6 @@ services:
     build:
       context: ./sample-app
     volumes:
-      - ./sample-app/index.js:/usr/src/app/index.js
+      - ./sample-app/index.js:/usr/src/app/index.js:ro,Z
     ports:
       - 4000:4000
