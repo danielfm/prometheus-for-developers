@@ -45,6 +45,9 @@ Run the following command to start everything up:
 
 ```bash
 $ docker-compose up -d
+
+# Or, if you use podman:
+$ podman-compose up -d
 ```
 
 - Alertmanager: <http://localhost:9093>
