@@ -770,7 +770,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(nodejs_eventloop_lag_seconds{job=\"$job\", instance=\"$instance\"}[30s]) * 120",
+              "expr": "nodejs_eventloop_lag_seconds{job=\"$job\", instance=\"$instance\"}",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
